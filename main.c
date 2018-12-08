@@ -5,31 +5,64 @@
 #include "fixedPri.h"
 #include "sleep.h"
 #include "mutex.h"
+#include "circularBuffer.h"
 
 static OS_mutex_t mutex;
+static queue_t queue;
 
 void task1(void const *const args) {
+	int value;
+	int status;
 	while (1) {
+		//OS_mutex_acquire(&mutex);
 		printf("Message from Task 1\r\n");
+		
+		status = queue_get(&queue, &value);
+		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		
+		status=queue_get(&queue, &value);
+		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		
+		status=queue_get(&queue, &value);
+		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		//OS_sleep(500);
+		//OS_mutex_release(&mutex);
 		OS_sleep(1000);
+		
 	}
 }
 void task2(void const *const args) {
+	int value;
+	int status;
 	while (1) {
+		//OS_mutex_acquire(&mutex);
+		//status=queue_get(&queue, &value);
 		printf("Message from Task 2\r\n");
-		OS_sleep(2000);
+		OS_sleep(3000);
+		//OS_mutex_release(&mutex);
+		//OS_sleep(3000);
 	}
 }
 void task3(void const *const args) {
 	while (1) {
+		//OS_mutex_acquire(&mutex);
 		printf("Message from Task 3\r\n");
 		OS_sleep(3000);
+		//OS_mutex_release(&mutex);
+		//OS_sleep(4000);
+		
 	}
 }
 void task4(void const *const args) {
 	while (1) {
+		//OS_mutex_acquire(&mutex);
 		printf("Message from Task 4\r\n");
-		OS_sleep(4000);
+		queue_put(&queue, 1);
+		queue_put(&queue, 2);
+		queue_put(&queue, 3);
+		OS_sleep(2000);
+		//OS_mutex_release(&mutex);
+		//OS_sleep(5000);
 	}
 }
 
@@ -58,7 +91,8 @@ int main(void) {
 	TCB3.priority = 8;
 	TCB4.priority = 5;
 	
-	// init_mutex(&mutex);
+	mutex_init(&mutex);
+	queue_init(&queue);
 
 	/* Initialise and start the OS */
 	//OS_init(&simpleRoundRobinScheduler);

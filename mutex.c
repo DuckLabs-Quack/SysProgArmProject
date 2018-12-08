@@ -1,7 +1,7 @@
 #include "mutex.h"
 #include "stm32f4xx.h"
 
-void init_mutex(OS_mutex_t* mutex) {
+void mutex_init(OS_mutex_t* mutex) {
 	mutex->counter = 0;
 	mutex->tcb = 0;
 }
@@ -16,7 +16,6 @@ void OS_mutex_acquire(OS_mutex_t* mutex) {
 		OS_TCB_t* currentTCB = OS_currentTCB();
 
 		if (loaded_value == 0) {
-			
 			uint32_t store_failed = __STREXW((uint32_t) currentTCB, (uint32_t*) &(mutex->tcb));
 			locked_with_own_tcb = !store_failed;
 		} else  if (loaded_value == (uint32_t) currentTCB) {

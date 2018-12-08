@@ -29,10 +29,11 @@ OS_Scheduler_t const fixedPriScheduler = {
 /* Scheduler */
 static OS_TCB_t const* fixedPri_scheduler(void) {
 	static int i = 0;
-	// Clear the yield flag if it's set - we simply don't care
-	OS_currentTCB()->state &= ~TASK_STATE_YIELD;
+
 	for (int j = 1; j <= SIMPLE_RR_MAX_TASKS; j++) {
-		i = (i + 1) % SIMPLE_RR_MAX_TASKS;
+		
+		tasks[i]->state &= ~TASK_STATE_YIELD;
+		
 		if (tasks[i] != 0 && tasks[i]->state != TASK_STATE_SLEEP && tasks[i]->state != TASK_STATE_WAIT) {
 			return tasks[i];
 		} else if (tasks[i]->state == TASK_STATE_SLEEP){
@@ -41,6 +42,7 @@ static OS_TCB_t const* fixedPri_scheduler(void) {
 				return tasks[i];
 			}
 		}
+		i = (i + 1) % SIMPLE_RR_MAX_TASKS;
 	}
 	// No tasks in the list, so return the idle task
 	return OS_idleTCB_p;
