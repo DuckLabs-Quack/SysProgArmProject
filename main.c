@@ -72,7 +72,23 @@ void printTasks();
 int main(void) {
 	/* Initialise the serial port so printf() works */
 	serial_init();
-
+	mutex_init(&mutex);
+	queue_init(&queue);
+	
+	int item1 = 1;
+	int item2 = 2;
+	int item3 = 3;
+	
+	linked_list_t testList;
+	linked_list_init(&testList);
+	linked_list_add(&testList, &item1);
+	linked_list_add(&testList, &item2);
+	linked_list_add(&testList, &item3);
+	
+	for (int i = 0; i<3; i++) {
+		int* testItem = linked_list_remove(&testList);
+		printf("\r\n Test: %d \r\n", *testItem);
+	}
 	printf("\r\nDocetOS Sleep and Mutex\r\n");
 
 	/* Reserve memory for two stacks and two TCBs.
@@ -90,9 +106,6 @@ int main(void) {
 	TCB2.priority = 6;
 	TCB3.priority = 8;
 	TCB4.priority = 5;
-	
-	mutex_init(&mutex);
-	queue_init(&queue);
 
 	/* Initialise and start the OS */
 	//OS_init(&simpleRoundRobinScheduler);

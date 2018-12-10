@@ -1,5 +1,6 @@
 #include "fixedPri.h"
 #include "stm32f4xx.h"
+#include <stdio.h>
 
 /* Prototypes (functions are static, so these aren't in the header file) */
 static OS_TCB_t const* fixedPri_scheduler(void);
