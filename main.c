@@ -7,6 +7,15 @@
 #include "mutex.h"
 #include "circularBuffer.h"
 
+#define ENTER(x) printf("ENTER "#x"\r\n")
+#define MID(x) printf("MID "#x"\r\n")
+#define EXIT(x) printf("EXIT "#x"\r\n")
+
+
+//#define ENTER(x) 
+//#define MID(x) 
+//#define EXIT(x) 
+
 static OS_mutex_t mutex;
 static queue_t queue;
 
@@ -14,7 +23,9 @@ void task1(void const *const args) {
 	int value;
 	int status;
 	while (1) {
-		//OS_mutex_acquire(&mutex);
+		ENTER(1);
+		OS_mutex_acquire(&mutex);
+		MID(1);
 		printf("Message from Task 1\r\n");
 		
 		status = queue_get(&queue, &value);
@@ -26,7 +37,8 @@ void task1(void const *const args) {
 		status=queue_get(&queue, &value);
 		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
 		//OS_sleep(500);
-		//OS_mutex_release(&mutex);
+		OS_mutex_release(&mutex);
+		EXIT(1);
 		OS_sleep(1000);
 		
 	}
@@ -35,34 +47,46 @@ void task2(void const *const args) {
 	int value;
 	int status;
 	while (1) {
-		//OS_mutex_acquire(&mutex);
+		ENTER(2);
+		OS_mutex_acquire(&mutex);
+		MID(2);
 		//status=queue_get(&queue, &value);
 		printf("Message from Task 2\r\n");
 		OS_sleep(3000);
-		//OS_mutex_release(&mutex);
-		//OS_sleep(3000);
+		OS_mutex_release(&mutex);
+		EXIT(2);
+		OS_yield();
+		OS_sleep(3000);
 	}
 }
 void task3(void const *const args) {
 	while (1) {
-		//OS_mutex_acquire(&mutex);
+		ENTER(3);
+		OS_mutex_acquire(&mutex);
+		MID(3);
 		printf("Message from Task 3\r\n");
 		OS_sleep(3000);
-		//OS_mutex_release(&mutex);
+		OS_mutex_release(&mutex);
+		EXIT(3);
 		//OS_sleep(4000);
 		
 	}
 }
 void task4(void const *const args) {
 	while (1) {
-		//OS_mutex_acquire(&mutex);
+		ENTER(4);
+		OS_mutex_acquire(&mutex);
+		MID(4);
 		printf("Message from Task 4\r\n");
-		queue_put(&queue, 1);
-		queue_put(&queue, 2);
-		queue_put(&queue, 3);
+		MID(4b);
+		//queue_put(&queue, 1);
+		//queue_put(&queue, 2);
+		//queue_put(&queue, 3);
 		OS_sleep(2000);
-		//OS_mutex_release(&mutex);
-		//OS_sleep(5000);
+		MID(4a);
+		OS_mutex_release(&mutex);
+		EXIT(4);
+		OS_sleep(5000);
 	}
 }
 

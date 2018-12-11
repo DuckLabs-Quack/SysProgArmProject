@@ -24,3 +24,21 @@ void linked_list_add(linked_list_t* linked_list, void* newItem) {
 		linked_list->head = newElement;
     
 }
+
+void linked_list_append(linked_list_t* linked_list, void* newItem) {
+		linked_list_element_t* newElement = malloc(sizeof(linked_list_element_t));
+		newElement->item = newItem;
+	  newElement->next = NULL;
+	
+		if (linked_list->head == NULL) {
+			linked_list->head = newElement;
+		} else {
+			linked_list_element_t* currentElement = linked_list->head;
+		
+			while (currentElement->next != NULL) {
+				currentElement = currentElement->next;
+			}
+			// Add the new item to the head of the list
+			currentElement->next = newElement;
+	}
+}

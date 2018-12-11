@@ -6,8 +6,8 @@
 static OS_TCB_t const* fixedPri_scheduler(void);
 static void fixedPri_addTask(OS_TCB_t* const tcb);
 static void fixedPri_taskExit(OS_TCB_t* const tcb);
-static void fixedPri_wait(OS_TCB_t* const tcb);
-static void fixedPri_notify(OS_TCB_t* const tcb);
+static void fixedPri_wait(void* const reason);
+static void fixedPri_notify(void* const reason);
 
 static OS_TCB_t* tasks[SIMPLE_RR_MAX_TASKS] = {0};
 
@@ -29,13 +29,14 @@ OS_Scheduler_t const fixedPriScheduler = {
 
 /* Scheduler */
 static OS_TCB_t const* fixedPri_scheduler(void) {
-	static int i = 0;
-
-	for (int j = 1; j <= SIMPLE_RR_MAX_TASKS; j++) {
+	for (int i = 0; i <= SIMPLE_RR_MAX_TASKS; i++) {
+		if (tasks[i] == NULL) {
+	      break;
+		}
 		
 		tasks[i]->state &= ~TASK_STATE_YIELD;
 		
-		if (tasks[i] != 0 && tasks[i]->state != TASK_STATE_SLEEP && tasks[i]->state != TASK_STATE_WAIT) {
+		if (tasks[i]->state != TASK_STATE_SLEEP && tasks[i]->state != TASK_STATE_WAIT) {
 			return tasks[i];
 		} else if (tasks[i]->state == TASK_STATE_SLEEP){
 			if (tasks[i]->data < OS_elapsedTicks()) {
@@ -43,7 +44,6 @@ static OS_TCB_t const* fixedPri_scheduler(void) {
 				return tasks[i];
 			}
 		}
-		i = (i + 1) % SIMPLE_RR_MAX_TASKS;
 	}
 	// No tasks in the list, so return the idle task
 	return OS_idleTCB_p;
@@ -85,18 +85,19 @@ static void fixedPri_taskExit(OS_TCB_t* const tcb) {
 }
 
 /* Wait */
-static void fixedPri_wait(OS_TCB_t* const tcb) {
+static void fixedPri_wait(void* const reason) {
 	OS_TCB_t* current_task = OS_currentTCB();
-	current_task->data = tcb->data;
+	//current_task->data = tcb->data;
 	current_task->state = TASK_STATE_WAIT;
 	
 	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
 
 /* Notify */
-static void fixedPri_notify(OS_TCB_t* const tcb) {
+static void fixedPri_notify(void* const reason) {
 	for (int i = 0; i < SIMPLE_RR_MAX_TASKS; i++) {
-		if (tasks[i]->state == TASK_STATE_WAIT && tasks[i]->data == tcb->data) {
+		//if (tasks[i]->state == TASK_STATE_WAIT && tasks[i]->data == tcb->data) {
+		if (tasks[i]->state == TASK_STATE_WAIT) {
 			tasks[i]->state &= ~TASK_STATE_WAIT;
 			tasks[i]->data = 0;
 		}

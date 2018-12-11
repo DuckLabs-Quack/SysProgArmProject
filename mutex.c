@@ -27,6 +27,7 @@ void OS_mutex_acquire(OS_mutex_t* mutex) {
 		}
 		
 	} while (!locked_with_own_tcb);
+	__DMB();
 	
 	mutex->counter++;
 }
