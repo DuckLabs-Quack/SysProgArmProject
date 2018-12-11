@@ -2,6 +2,9 @@
 #include "stm32f4xx.h"
 #include <stdio.h>
 
+#include "linkedList.h"
+#include "mutex.h"
+
 /* Prototypes (functions are static, so these aren't in the header file) */
 static OS_TCB_t const* fixedPri_scheduler(void);
 static void fixedPri_addTask(OS_TCB_t* const tcb);
@@ -90,11 +93,21 @@ static void fixedPri_wait(void* const reason) {
 	//current_task->data = tcb->data;
 	current_task->state = TASK_STATE_WAIT;
 	
+	OS_mutex_t* mutex = (void*)reason;
+	
+	linked_list_append(&mutex->waitlist, current_task);
+	
 	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
 
 /* Notify */
 static void fixedPri_notify(void* const reason) {
+	OS_mutex_t* mutex = (void*)reason;
+	OS_TCB_t* waitingTask = linked_list_remove(&mutex->waitlist);
+	if (waitingTask != NULL) {
+		waitingTask->state &= ~TASK_STATE_WAIT;
+	}
+	/*
 	for (int i = 0; i < SIMPLE_RR_MAX_TASKS; i++) {
 		//if (tasks[i]->state == TASK_STATE_WAIT && tasks[i]->data == tcb->data) {
 		if (tasks[i]->state == TASK_STATE_WAIT) {
@@ -102,4 +115,5 @@ static void fixedPri_notify(void* const reason) {
 			tasks[i]->data = 0;
 		}
 	}
+	*/
 }

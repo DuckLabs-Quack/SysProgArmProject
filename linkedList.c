@@ -10,6 +10,9 @@ void* linked_list_remove(linked_list_t* linked_list) {
     // Return the head of the list of blocks
     // Update the head pointer
     linked_list_element_t* oldHead = linked_list->head;
+		if (oldHead == NULL) {
+			return NULL;
+		}
     linked_list->head = oldHead->next;
 		void* item = oldHead->item;
 		free(oldHead);
