@@ -3,10 +3,12 @@
 
 #include <stdint.h>
 #include "os_internal.h"
+#include "linkedList.h"
 
 typedef struct {
 	OS_TCB_t* tcb;
 	uint32_t counter;
+	linked_list_t waitlist;
 } OS_mutex_t;
 
 void mutex_init(OS_mutex_t* mutex);

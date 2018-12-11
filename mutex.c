@@ -4,6 +4,7 @@
 void mutex_init(OS_mutex_t* mutex) {
 	mutex->counter = 0;
 	mutex->tcb = 0;
+	linked_list_init(&mutex->waitlist);
 }
 
 void OS_mutex_acquire(OS_mutex_t* mutex) {
@@ -21,6 +22,7 @@ void OS_mutex_acquire(OS_mutex_t* mutex) {
 		} else  if (loaded_value == (uint32_t) currentTCB) {
 			locked_with_own_tcb = 1;
 		} else {
+			//linked_list_add(&mutex->waitlist, currentTCB);
 			OS_wait(mutex);
 		}
 		
