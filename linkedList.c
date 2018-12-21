@@ -41,7 +41,7 @@ void linked_list_append(linked_list_t* linked_list, void* newItem) {
 			while (currentElement->next != NULL) {
 				currentElement = currentElement->next;
 			}
-			// Add the new item to the head of the list
+			// Add the new item to the end of the list
 			currentElement->next = newElement;
 	}
 }
