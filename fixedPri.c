@@ -5,11 +5,13 @@
 #include "linkedList.h"
 #include "mutex.h"
 
+typedef linked_list_t waitlist_t;
+
 /* Prototypes (functions are static, so these aren't in the header file) */
 static OS_TCB_t const* fixedPri_scheduler(void);
 static void fixedPri_addTask(OS_TCB_t* const tcb);
 static void fixedPri_taskExit(OS_TCB_t* const tcb);
-static void fixedPri_wait(void* const reason);
+static void fixedPri_wait(void* const reason, uint32_t* value);
 static void fixedPri_notify(void* const reason);
 
 static OS_TCB_t* tasks[SIMPLE_RR_MAX_TASKS] = {0};
@@ -88,22 +90,25 @@ static void fixedPri_taskExit(OS_TCB_t* const tcb) {
 }
 
 /* Wait */
-static void fixedPri_wait(void* const reason) {
+static void fixedPri_wait(void* const reason, uint32_t* value) {
+	if (*value != *OS_checkValue()) {
+		return;
+	}
 	OS_TCB_t* current_task = OS_currentTCB();
 	//current_task->data = tcb->data;
 	current_task->state = TASK_STATE_WAIT;
 	
-	OS_mutex_t* mutex = (void*)reason;
+	waitlist_t* waitlist = (void*)reason;
 	
-	linked_list_append(&mutex->waitlist, current_task);
+	linked_list_append(waitlist, current_task);
 	
 	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
 
 /* Notify */
 static void fixedPri_notify(void* const reason) {
-	OS_mutex_t* mutex = (void*)reason;
-	OS_TCB_t* waitingTask = linked_list_remove(&mutex->waitlist);
+	waitlist_t* waitlist = (void*)reason;
+	OS_TCB_t* waitingTask = linked_list_remove(waitlist);
 	if (waitingTask != NULL) {
 		waitingTask->state &= ~TASK_STATE_WAIT;
 	}

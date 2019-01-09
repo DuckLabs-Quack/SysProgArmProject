@@ -133,22 +133,22 @@ int main(void) {
 	static OS_TCB_t TCB1, TCB2, TCB3, TCB4;
 
 	/* Initialise the TCBs using the two functions above */
-	OS_initialiseTCB(&TCB1, stack1+64, task5, 0);
-	//OS_initialiseTCB(&TCB2, stack2+64, task2, 0);
-	//OS_initialiseTCB(&TCB3, stack3+64, task3, 0);
-	//OS_initialiseTCB(&TCB4, stack4+64, task4, 0);
+	OS_initialiseTCB(&TCB1, stack1+64, task1, 0);
+	OS_initialiseTCB(&TCB2, stack2+64, task2, 0);
+	OS_initialiseTCB(&TCB3, stack3+64, task3, 0);
+	OS_initialiseTCB(&TCB4, stack4+64, task4, 0);
 	TCB1.priority = 10;
-	//TCB2.priority = 6;
-	//TCB3.priority = 8;
-	//TCB4.priority = 5;
+	TCB2.priority = 6;
+	TCB3.priority = 8;
+	TCB4.priority = 5;
 
 	/* Initialise and start the OS */
 	//OS_init(&simpleRoundRobinScheduler);
 	OS_init(&fixedPriScheduler);
 	OS_addTask(&TCB1);
-	//OS_addTask(&TCB2);
-	//OS_addTask(&TCB3);
-	//OS_addTask(&TCB4);
+	OS_addTask(&TCB2);
+	OS_addTask(&TCB3);
+	OS_addTask(&TCB4);
 	
 	printTasks();
 	

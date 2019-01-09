@@ -23,7 +23,7 @@ void OS_mutex_acquire(OS_mutex_t* mutex) {
 			locked_with_own_tcb = 1;
 		} else {
 			//linked_list_add(&mutex->waitlist, currentTCB);
-			OS_wait(mutex);
+			OS_wait(&mutex->waitlist, OS_checkValue());
 		}
 		
 	} while (!locked_with_own_tcb);
@@ -37,6 +37,6 @@ void OS_mutex_release(OS_mutex_t* mutex) {
 	
 	if (mutex->counter == 0) {
 		mutex->tcb = 0;
-		OS_notify(mutex);
+		OS_notify(&mutex->waitlist);
 	}
 }
