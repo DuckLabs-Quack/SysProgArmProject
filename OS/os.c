@@ -127,11 +127,11 @@ void _svc_OS_task_exit(void) {
 }
 
 void _svc_OS_wait(_OS_SVC_StackFrame_t const * const stack) {
-	uint32_t value = __LDREXW((uint32_t*) _currentTCB);
-	
-	if (value != _checkValue) {
-		uint32_t store_failed = __STREXW((uint32_t) _currentTCB, (uint32_t*) value);
-	}
+//	uint32_t value = __LDREXW((uint32_t*) _currentTCB);
+//	
+//	if (value != _checkValue) {
+//		uint32_t store_failed = __STREXW((uint32_t) _currentTCB, (uint32_t*) value);
+//	}
 	
 	_scheduler->wait_callback((void*)stack->r0, (void*)stack->r1);
 }

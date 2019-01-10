@@ -30,13 +30,13 @@ void task1(void const *const args) {
 		MID(1);
 		printf("Message from Task 1\r\n");
 		
-		status = queue_get(&queue, &value);
+		//status = queue_get(&queue, &value);
 		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
 		
-		status=queue_get(&queue, &value);
+		//status=queue_get(&queue, &value);
 		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
 		
-		status=queue_get(&queue, &value);
+		//status=queue_get(&queue, &value);
 		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
 		//OS_sleep(500);
 		OS_mutex_release(&mutex);
@@ -70,7 +70,7 @@ void task3(void const *const args) {
 		OS_sleep(3000);
 		OS_mutex_release(&mutex);
 		EXIT(3);
-		//OS_sleep(4000);
+		OS_sleep(4000);
 		
 	}
 }
@@ -81,9 +81,9 @@ void task4(void const *const args) {
 		MID(4);
 		printf("Message from Task 4\r\n");
 		MID(4b);
-		queue_put(&queue, 1);
-		queue_put(&queue, 2);
-		queue_put(&queue, 3);
+		//queue_put(&queue, 1);
+		//queue_put(&queue, 2);
+		//queue_put(&queue, 3);
 		OS_sleep(2000);
 		MID(4a);
 		OS_mutex_release(&mutex);
@@ -98,6 +98,21 @@ void task5(void const *const args) {
 		f *= 2.5f;
 		printf("Message from Task 5: %.1f\r\n", f);
 	}
+}
+
+OS_TCB_t* orderedTasks[10];
+
+uint32_t taskID(OS_TCB_t* task) {
+	for (int i = 0; i < FIX_PRIO_MAX_TASKS; i++) {
+		if (orderedTasks[i] == task) {
+			return i+1;
+		}
+	}
+	return -1;
+}
+
+uint32_t getCurrentTaskID() {
+	return taskID(OS_currentTCB());
 }
 
 void printTasks();
@@ -131,16 +146,25 @@ int main(void) {
 	__align(8)
 	static uint32_t stack1[64], stack2[64], stack3[64], stack4[64];
 	static OS_TCB_t TCB1, TCB2, TCB3, TCB4;
+	
+	// DEBUG
+	uint32_t i = 0;
+	orderedTasks[i++] = &TCB1;
+	orderedTasks[i++] = &TCB2;
+	orderedTasks[i++] = &TCB3;
+	orderedTasks[i++] = &TCB4;
+	
+	// END DEBUG
 
 	/* Initialise the TCBs using the two functions above */
 	OS_initialiseTCB(&TCB1, stack1+64, task1, 0);
 	OS_initialiseTCB(&TCB2, stack2+64, task2, 0);
 	OS_initialiseTCB(&TCB3, stack3+64, task3, 0);
 	OS_initialiseTCB(&TCB4, stack4+64, task4, 0);
-	TCB1.priority = 10;
-	TCB2.priority = 6;
-	TCB3.priority = 8;
-	TCB4.priority = 5;
+	TCB1.priority = 3;
+	TCB2.priority = 1;
+	TCB3.priority = 2;
+	TCB4.priority = 0;
 
 	/* Initialise and start the OS */
 	//OS_init(&simpleRoundRobinScheduler);

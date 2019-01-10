@@ -22,7 +22,6 @@ void OS_mutex_acquire(OS_mutex_t* mutex) {
 		} else  if (loaded_value == (uint32_t) currentTCB) {
 			locked_with_own_tcb = 1;
 		} else {
-			//linked_list_add(&mutex->waitlist, currentTCB);
 			OS_wait(&mutex->waitlist, OS_checkValue());
 		}
 		

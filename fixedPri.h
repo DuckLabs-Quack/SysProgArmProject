@@ -5,7 +5,7 @@
 #include "linkedList.h"
 
 // How many tasks can this scheduler cope with?
-#define SIMPLE_RR_MAX_TASKS 8
+#define FIX_PRIO_MAX_TASKS 8
 
 extern OS_Scheduler_t const fixedPriScheduler;
 
