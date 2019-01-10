@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "mutex.h"
-//#include "waitList.h"
+#include "stack.h"
 
 typedef linked_list_t waitlist_t;
 
@@ -13,6 +13,7 @@ static void fixedPri_addTask(OS_TCB_t* const tcb);
 static void fixedPri_taskExit(OS_TCB_t* const tcb);
 static void fixedPri_wait(void* const reason, uint32_t* value);
 static void fixedPri_notify(void* const reason);
+static void fixedPri_ISR_notify(void* const reason);
 
 static OS_TCB_t* tasks[FIX_PRIO_MAX_TASKS] = {0};
 
@@ -43,11 +44,21 @@ OS_Scheduler_t const fixedPriScheduler = {
 	.addtask_callback = fixedPri_addTask,
 	.taskexit_callback = fixedPri_taskExit,
 	.wait_callback = fixedPri_wait,
-	.notify_callback = fixedPri_notify
+	.notify_callback = fixedPri_notify,
+	.ISR_notify_callback = fixedPri_ISR_notify
 };
 
 /* Scheduler */
 static OS_TCB_t const* fixedPri_scheduler(void) {
+	
+	stack_t* pendingISRnotify = OS_get_pending_ISR_notify();
+	
+	while (!stack_is_empty(pendingISRnotify)) {
+		waitlist_t* waitlist = stack_pop(pendingISRnotify);
+		//OS_notify(waitlist);
+		fixedPri_notify(waitlist);
+	}
+	
 	for (int i = 0; i <= FIX_PRIO_MAX_TASKS; i++) {
 		if (tasks[i] == NULL) {
 	      break;
@@ -139,4 +150,19 @@ static void fixedPri_notify(void* const reason) {
 		waitingTask->state &= ~TASK_STATE_WAIT;
 	}
 	
+}
+
+/* ISR Notify */
+static void fixedPri_ISR_notify(void* const reason) {
+	printf("WL ISR notify start\r\n");
+	
+	waitlist_t* waitlist = (void*)reason;
+	
+	stack_t* pendingISRnotify = OS_get_pending_ISR_notify();
+	
+	printWL(waitlist);
+	
+	if (!stack_is_full(pendingISRnotify)) {
+		stack_push(pendingISRnotify, reason);
+	}
 }

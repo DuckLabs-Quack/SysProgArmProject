@@ -2,6 +2,7 @@
 #define _OS_H_
 
 #include "task.h"
+#include "../stack.h"
 /********************/
 /* Type definitions */
 /********************/
@@ -15,7 +16,8 @@ enum OS_SVC_e {
 	OS_SVC_YIELD,
 	OS_SVC_SCHEDULE,
 	OS_SVC_WAIT,
-	OS_SVC_NOTIFY
+	OS_SVC_NOTIFY,
+	SVC_INTERRUPT_TEST
 };
 
 /* A structure to hold callbacks for a scheduler, plus a 'preemptive' flag */
@@ -26,6 +28,7 @@ typedef struct {
 	void (* taskexit_callback)(OS_TCB_t * const task);
 	void (* wait_callback)(void* const reason, uint32_t* value);
 	void (* notify_callback)(void* const reason);
+	void (* ISR_notify_callback)(void* const reason);
 } OS_Scheduler_t;
 
 /***************************/
@@ -75,6 +78,9 @@ void __svc(OS_SVC_YIELD) OS_yield(void);
 void __svc(OS_SVC_WAIT) OS_wait(void* reason, uint32_t* value);
 void __svc(OS_SVC_NOTIFY) OS_notify(void* reason);
 
+/* ISR deferred nofity */
+void  OS_ISR_notify(void* reason);
+
 /****************/
 /* Declarations */
 /****************/
@@ -83,6 +89,8 @@ void __svc(OS_SVC_NOTIFY) OS_notify(void* reason);
 extern OS_TCB_t const * const OS_idleTCB_p;
 
 uint32_t* OS_checkValue(void);
+
+stack_t* OS_get_pending_ISR_notify(void);
 
 #endif /* _OS_H_ */
 

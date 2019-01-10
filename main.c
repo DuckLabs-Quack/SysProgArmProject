@@ -7,6 +7,7 @@
 #include "mutex.h"
 #include "circularBuffer.h"
 #include "memPool.h"
+#include "interrupt.h"
 
 #define ENTER(x) printf("ENTER "#x"\r\n")
 #define MID(x) printf("MID "#x"\r\n")
@@ -19,7 +20,6 @@
 
 static OS_mutex_t mutex;
 static queue_t queue;
-
 
 void task1(void const *const args) {
 	int value;
@@ -80,14 +80,16 @@ void task4(void const *const args) {
 		OS_mutex_acquire(&mutex);
 		MID(4);
 		printf("Message from Task 4\r\n");
-		MID(4b);
+		MID(4a);
 		//queue_put(&queue, 1);
 		//queue_put(&queue, 2);
 		//queue_put(&queue, 3);
 		OS_sleep(2000);
-		MID(4a);
+		MID(4b);
 		OS_mutex_release(&mutex);
 		EXIT(4);
+		interrupt_test(&mutex);
+		//OS_ISR_notify(&mutex.waitlist);
 		OS_sleep(5000);
 	}
 }

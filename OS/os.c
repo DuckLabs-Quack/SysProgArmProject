@@ -21,6 +21,10 @@ static OS_Scheduler_t const * _scheduler = 0;
 /* Check code variable for checking the value of registers after an ISR calls OS_notify */
 static uint32_t _checkValue = 0;
 
+/* Stack frame for the */
+static stack_t _pending_ISR_notify_stack;
+
+
 /* GLOBAL: Holds pointer to current TCB.  DO NOT MODIFY, EVER. */
 OS_TCB_t * volatile _currentTCB = 0;
 /* Getter for the current TCB pointer.  Safer to use because it can't be used
@@ -61,6 +65,8 @@ void OS_init(OS_Scheduler_t const * scheduler) {
 	ASSERT(_scheduler->taskexit_callback);
 	ASSERT(_scheduler->wait_callback);
 	ASSERT(_scheduler->notify_callback);
+	ASSERT(_scheduler->ISR_notify_callback);
+	stack_init(&_pending_ISR_notify_stack);
 }
 
 /* Starts the OS and never returns. */
@@ -141,8 +147,17 @@ void _svc_OS_notify(_OS_SVC_StackFrame_t const * const stack) {
 	_scheduler->notify_callback((void*)stack->r0);
 }
 
+void OS_ISR_notify(void* reason) {
+	_checkValue++;
+	__CLREX();
+	_scheduler->ISR_notify_callback(reason);
+}
+
 /* Check value return function */
 uint32_t* OS_checkValue (void) {
 	return &_checkValue;
 }
 
+stack_t* OS_get_pending_ISR_notify(void) {
+	return &_pending_ISR_notify_stack;
+}
