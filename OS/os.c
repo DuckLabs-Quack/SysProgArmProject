@@ -18,10 +18,11 @@ static volatile uint32_t _ticks = 0;
 /* Pointer to the 'scheduler' struct containing callback pointers */
 static OS_Scheduler_t const * _scheduler = 0;
 
-/* Check code variable for checking the value of registers after an ISR calls OS_notify */
-static uint32_t _checkValue = 0;
+/* Check code variable for checking if an ISR calls OS_notify */
+/* Volatile because the value can change on an ISR that calls OS_ISR_notifty and on normal OS_notify calls */
+static volatile uint32_t _checkValue = 0;
 
-/* Stack frame for the */
+/* Stack frame for the ISR OS_notify to store the current task wait list at the time of the interrupt */
 static stack_t _pending_ISR_notify_stack;
 
 
@@ -78,10 +79,15 @@ void OS_start() {
 
 /* Initialises a task control block (TCB) and its associated stack.  See os.h for details. */
 void OS_initialiseTCB(OS_TCB_t * TCB, uint32_t * const stack, void (* const func)(void const * const), void const * const data) {
-	TCB->sp = stack - (sizeof(OS_StackFrame_t) / sizeof(uint32_t));
+//	TCB->sp = stack - (sizeof(OS_StackFrame_t) / sizeof(uint32_t));
+//	TCB->priority = TCB->state = TCB->data = 0;
+//	OS_StackFrame_t *sf = (OS_StackFrame_t *)(TCB->sp);
+//	memset(sf, 0, sizeof(OS_StackFrame_t));
+	TCB->sp = stack - (sizeof(OS_StackFrameFPU_t) / sizeof(uint32_t));
 	TCB->priority = TCB->state = TCB->data = 0;
-	OS_StackFrame_t *sf = (OS_StackFrame_t *)(TCB->sp);
-	memset(sf, 0, sizeof(OS_StackFrame_t));
+	OS_StackFrameFPU_t *sf = (OS_StackFrameFPU_t *)(TCB->sp);
+	memset(sf, 0, sizeof(OS_StackFrameFPU_t));
+	
 	/* By placing the address of the task function in pc, and the address of _OS_task_end() in lr, the task
 		 function will be executed on the first context switch, and if it ever exits, _OS_task_end() will be
 		 called automatically */

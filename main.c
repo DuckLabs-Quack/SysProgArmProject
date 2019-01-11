@@ -21,26 +21,28 @@
 static OS_mutex_t mutex;
 static queue_t queue;
 
+void printStackPointers();
+
 void task1(void const *const args) {
 	int value;
 	int status;
 	while (1) {
-		ENTER(1);
-		OS_mutex_acquire(&mutex);
-		MID(1);
-		printf("Message from Task 1\r\n");
+		//ENTER(1);
+		//OS_mutex_acquire(&mutex);
+		//MID(1);
+		//printf("Message from Task 1\r\n");
 		
 		//status = queue_get(&queue, &value);
-		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		//printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
 		
 		//status=queue_get(&queue, &value);
-		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		//printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
 		
 		//status=queue_get(&queue, &value);
-		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		//printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
 		//OS_sleep(500);
-		OS_mutex_release(&mutex);
-		EXIT(1);
+		//OS_mutex_release(&mutex);
+		//EXIT(1);
 		OS_sleep(1000);
 		
 	}
@@ -49,15 +51,16 @@ void task2(void const *const args) {
 	int value;
 	int status;
 	while (1) {
-		ENTER(2);
-		OS_mutex_acquire(&mutex);
-		MID(2);
+		//ENTER(2);
+		//OS_mutex_acquire(&mutex);
+		//MID(2);
 		//status=queue_get(&queue, &value);
+		printStackPointers();
 		printf("Message from Task 2\r\n");
-		OS_sleep(3000);
-		OS_mutex_release(&mutex);
-		EXIT(2);
-		OS_yield();
+		//OS_sleep(3000);
+		//OS_mutex_release(&mutex);
+		//EXIT(2);
+		//OS_yield();
 		OS_sleep(3000);
 	}
 }
@@ -97,8 +100,14 @@ void task4(void const *const args) {
 void task5(void const *const args) {
 	float f = 2.5f;
 	while (1) {
-		f *= 2.5f;
+		//OS_mutex_acquire(&mutex);
+		printStackPointers();
 		printf("Message from Task 5: %.1f\r\n", f);
+		//printf("Message from Task 5: %u\r\n", (int)f);
+		f *= 2.5f;
+		OS_sleep(2000);
+		//OS_mutex_release(&mutex);
+		//OS_sleep(5000);
 	}
 }
 
@@ -117,6 +126,12 @@ uint32_t getCurrentTaskID() {
 	return taskID(OS_currentTCB());
 }
 
+void printStackPointers() {
+	for (int i = 0; i < 4; i++) {
+		printf("%#010x\r\n", (uint32_t)orderedTasks[i]->sp);
+	}
+}
+
 void printTasks();
 
 /* MAIN FUNCTION */
@@ -125,6 +140,13 @@ int main(void) {
 	serial_init();
 	mutex_init(&mutex);
 	queue_init(&queue);
+	
+	float f = 2.0f;
+	
+	for (int i=0;i<10;i++) {
+		f *= (float)i;
+		printf("%.1f\r\n", (float)f);
+	}
 	
 	int item1 = 1;
 	int item2 = 2;
@@ -146,7 +168,8 @@ int main(void) {
 	/* Reserve memory for two stacks and two TCBs.
 	   Remember that stacks must be 8-byte aligned. */
 	__align(8)
-	static uint32_t stack1[64], stack2[64], stack3[64], stack4[64];
+	static uint32_t stack1[256], stack2[256], stack3[256], stack4[256];
+	//static uint32_t stack1[256], stack2[256], stack3[256], stack4[256];
 	static OS_TCB_t TCB1, TCB2, TCB3, TCB4;
 	
 	// DEBUG
@@ -157,12 +180,21 @@ int main(void) {
 	orderedTasks[i++] = &TCB4;
 	
 	// END DEBUG
+	
+	FPU->FPCCR &= FPU_FPCCR_ASPEN_Msk;
+	FPU->FPCAR;
+	SCB->CPACR |= 0xf << 20;
+	//SCB->CPACR |= 0b00000000000100000000000000000000 << 20;
 
 	/* Initialise the TCBs using the two functions above */
-	OS_initialiseTCB(&TCB1, stack1+64, task1, 0);
-	OS_initialiseTCB(&TCB2, stack2+64, task2, 0);
-	OS_initialiseTCB(&TCB3, stack3+64, task3, 0);
-	OS_initialiseTCB(&TCB4, stack4+64, task4, 0);
+	//OS_initialiseTCB(&TCB1, stack1+64, task1, 0);
+	//OS_initialiseTCB(&TCB2, stack2+64, task2, 0);
+	//OS_initialiseTCB(&TCB3, stack3+64, task3, 0);
+	//OS_initialiseTCB(&TCB4, stack4+64, task5, 0);
+	OS_initialiseTCB(&TCB1, stack1+256, task1, 0);
+	OS_initialiseTCB(&TCB2, stack2+256, task2, 0);
+	OS_initialiseTCB(&TCB3, stack3+256, task3, 0);
+	OS_initialiseTCB(&TCB4, stack4+256, task5, 0);
 	TCB1.priority = 3;
 	TCB2.priority = 1;
 	TCB3.priority = 2;
@@ -178,8 +210,21 @@ int main(void) {
 	
 	printTasks();
 	
-	//FPU->FPCAR;SCB->CPACR |= 0xf << 20;
-	//SCB->CPACR |= 0b00000000000100000000000000000000 << 20;
+	printf("TOP\r\n");
+	printf("%#010x\r\n", (uint32_t)stack1);
+	printf("%#010x\r\n", (uint32_t)stack2);
+	printf("%#010x\r\n", (uint32_t)stack3);
+	printf("%#010x\r\n", (uint32_t)stack4);
+	printf("BOTTOM\r\n");
+	printf("%#010x\r\n", (uint32_t)stack1+256*4);
+	printf("%#010x\r\n", (uint32_t)stack2+256*4);
+	printf("%#010x\r\n", (uint32_t)stack3+256*4);
+	printf("%#010x\r\n", (uint32_t)stack4+256*4);
+	printf("START\r\n");
+	
+
+	
+	//printStackPointers();
 	
 	OS_start();
 }

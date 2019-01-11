@@ -5,6 +5,12 @@
 #include "mutex.h"
 #include "stack.h"
 
+#define USE_DEBUG_PF 0
+#if USE_DEBUG_PF
+#define DEBUG_PF(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PF(...)
+#endif
 typedef linked_list_t waitlist_t;
 
 /* Prototypes (functions are static, so these aren't in the header file) */
@@ -19,11 +25,11 @@ static OS_TCB_t* tasks[FIX_PRIO_MAX_TASKS] = {0};
 
 void printTasks() {
 	for(int i = 0; i < FIX_PRIO_MAX_TASKS; i++) {
-		printf("%u\r\n", tasks[i]->priority);
+		DEBUG_PF("%u\r\n", tasks[i]->priority);
 	}
 }
 
-
+void printStackPointers();
 uint32_t taskID(OS_TCB_t* task);
 uint32_t getCurrentTaskID();
 
@@ -31,7 +37,7 @@ void printWL(waitlist_t* wl) {
 	linked_list_element_t* cur = wl->head;
 	
 	while (cur != NULL) {
-		printf("WL %u\r\n", taskID(cur->item));
+		DEBUG_PF("WL %u\r\n", taskID(cur->item));
 		cur = cur->next;
 	}
 }
@@ -50,6 +56,8 @@ OS_Scheduler_t const fixedPriScheduler = {
 
 /* Scheduler */
 static OS_TCB_t const* fixedPri_scheduler(void) {
+	
+	//printStackPointers();
 	
 	stack_t* pendingISRnotify = OS_get_pending_ISR_notify();
 	
@@ -116,7 +124,7 @@ static void fixedPri_taskExit(OS_TCB_t* const tcb) {
 
 /* Wait */
 static void fixedPri_wait(void* const reason, uint32_t* value) {
-	printf("TASK %u: enter wait\r\n", getCurrentTaskID());
+	DEBUG_PF("TASK %u: enter wait\r\n", getCurrentTaskID());
 	if (*value != *OS_checkValue()) {
 		return;
 	}
@@ -125,12 +133,12 @@ static void fixedPri_wait(void* const reason, uint32_t* value) {
 	
 	waitlist_t* waitlist = (void*) reason;
 	
-	printf("WL wait start\r\n");
+	DEBUG_PF("WL wait start\r\n");
 	printWL(waitlist);
 	linked_list_append(waitlist, current_task);
-	printf("WL wait end\r\n");
+	DEBUG_PF("WL wait end\r\n");
 	printWL(waitlist);
-	printf("TASK %u: wait\r\n", getCurrentTaskID());
+	DEBUG_PF("TASK %u: wait\r\n", getCurrentTaskID());
 	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
 
@@ -138,15 +146,15 @@ static void fixedPri_wait(void* const reason, uint32_t* value) {
 static void fixedPri_notify(void* const reason) {
 	waitlist_t* waitlist = (void*)reason;
 	
-	printf("WL notify start\r\n");
+	DEBUG_PF("WL notify start\r\n");
 	printWL(waitlist);
 	
 	OS_TCB_t* waitingTask = linked_list_remove(waitlist);
 	
-	printf("WL notify end\r\n");
+	DEBUG_PF("WL notify end\r\n");
 	printWL(waitlist);
 	if (waitingTask != NULL) {
-		printf("TASK %u: notify : %u\r\n", getCurrentTaskID(), taskID(waitingTask));
+		DEBUG_PF("TASK %u: notify : %u\r\n", getCurrentTaskID(), taskID(waitingTask));
 		waitingTask->state &= ~TASK_STATE_WAIT;
 	}
 	
@@ -154,7 +162,7 @@ static void fixedPri_notify(void* const reason) {
 
 /* ISR Notify */
 static void fixedPri_ISR_notify(void* const reason) {
-	printf("WL ISR notify start\r\n");
+	DEBUG_PF("WL ISR notify start\r\n");
 	
 	waitlist_t* waitlist = (void*)reason;
 	
