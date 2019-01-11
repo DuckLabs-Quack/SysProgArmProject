@@ -17,7 +17,7 @@ typedef linked_list_t waitlist_t;
 static OS_TCB_t const* fixedPri_scheduler(void);
 static void fixedPri_addTask(OS_TCB_t* const tcb);
 static void fixedPri_taskExit(OS_TCB_t* const tcb);
-static void fixedPri_wait(void* const reason, uint32_t* value);
+static void fixedPri_wait(void* const reason, uint32_t value);
 static void fixedPri_notify(void* const reason);
 static void fixedPri_ISR_notify(void* const reason);
 
@@ -123,9 +123,9 @@ static void fixedPri_taskExit(OS_TCB_t* const tcb) {
 }
 
 /* Wait */
-static void fixedPri_wait(void* const reason, uint32_t* value) {
+static void fixedPri_wait(void* const reason, uint32_t value) {
 	DEBUG_PF("TASK %u: enter wait\r\n", getCurrentTaskID());
-	if (*value != *OS_checkValue()) {
+	if (value != OS_checkValue()) {
 		return;
 	}
 	OS_TCB_t* current_task = OS_currentTCB();

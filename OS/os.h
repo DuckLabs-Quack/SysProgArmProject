@@ -26,7 +26,7 @@ typedef struct {
 	OS_TCB_t const * (* scheduler_callback)(void);
 	void (* addtask_callback)(OS_TCB_t * const newTask);
 	void (* taskexit_callback)(OS_TCB_t * const task);
-	void (* wait_callback)(void* const reason, uint32_t* value);
+	void (* wait_callback)(void* const reason, uint32_t value);
 	void (* notify_callback)(void* const reason);
 	void (* ISR_notify_callback)(void* const reason);
 } OS_Scheduler_t;
@@ -75,7 +75,7 @@ void __svc(OS_SVC_ADD_TASK) OS_addTask(OS_TCB_t const * const);
 /* SVC delegate to yield the current task */
 void __svc(OS_SVC_YIELD) OS_yield(void);
 
-void __svc(OS_SVC_WAIT) OS_wait(void* reason, uint32_t* value);
+void __svc(OS_SVC_WAIT) OS_wait(void* reason, uint32_t value);
 void __svc(OS_SVC_NOTIFY) OS_notify(void* reason);
 
 /* ISR deferred nofity */
@@ -88,7 +88,7 @@ void  OS_ISR_notify(void* reason);
 /* Idle task TCB */
 extern OS_TCB_t const * const OS_idleTCB_p;
 
-uint32_t* OS_checkValue(void);
+uint32_t OS_checkValue(void);
 
 stack_t* OS_get_pending_ISR_notify(void);
 

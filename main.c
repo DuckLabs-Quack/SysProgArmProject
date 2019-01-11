@@ -27,22 +27,21 @@ void task1(void const *const args) {
 	int value;
 	int status;
 	while (1) {
-		//ENTER(1);
-		//OS_mutex_acquire(&mutex);
-		//MID(1);
-		//printf("Message from Task 1\r\n");
+		ENTER(1);
+		OS_mutex_acquire(&mutex);
+		MID(1);
 		
-		//status = queue_get(&queue, &value);
-		//printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		status = queue_get(&queue, &value);
+		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
 		
-		//status=queue_get(&queue, &value);
-		//printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		status=queue_get(&queue, &value);
+		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
 		
-		//status=queue_get(&queue, &value);
-		//printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
-		//OS_sleep(500);
-		//OS_mutex_release(&mutex);
-		//EXIT(1);
+		status=queue_get(&queue, &value);
+		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		OS_sleep(500);
+		OS_mutex_release(&mutex);
+		EXIT(1);
 		OS_sleep(1000);
 		
 	}
@@ -51,16 +50,14 @@ void task2(void const *const args) {
 	int value;
 	int status;
 	while (1) {
-		//ENTER(2);
-		//OS_mutex_acquire(&mutex);
-		//MID(2);
-		//status=queue_get(&queue, &value);
+		ENTER(2);
+		OS_mutex_acquire(&mutex);
+		MID(2);
 		printStackPointers();
 		printf("Message from Task 2\r\n");
-		//OS_sleep(3000);
-		//OS_mutex_release(&mutex);
-		//EXIT(2);
-		//OS_yield();
+		OS_sleep(3000);
+		OS_mutex_release(&mutex);
+		EXIT(2);
 		OS_sleep(3000);
 	}
 }
@@ -84,9 +81,9 @@ void task4(void const *const args) {
 		MID(4);
 		printf("Message from Task 4\r\n");
 		MID(4a);
-		//queue_put(&queue, 1);
-		//queue_put(&queue, 2);
-		//queue_put(&queue, 3);
+		queue_put(&queue, 1);
+		queue_put(&queue, 2);
+		queue_put(&queue, 3);
 		OS_sleep(2000);
 		MID(4b);
 		OS_mutex_release(&mutex);
@@ -100,14 +97,18 @@ void task4(void const *const args) {
 void task5(void const *const args) {
 	float f = 2.5f;
 	while (1) {
-		//OS_mutex_acquire(&mutex);
+		ENTER(5);
+		OS_mutex_acquire(&mutex);
+		MID(5);
 		printStackPointers();
 		printf("Message from Task 5: %.1f\r\n", f);
+		MID(5a);
 		//printf("Message from Task 5: %u\r\n", (int)f);
 		f *= 2.5f;
 		OS_sleep(2000);
-		//OS_mutex_release(&mutex);
-		//OS_sleep(5000);
+		OS_mutex_release(&mutex);
+		EXIT(5);
+		OS_sleep(4000);
 	}
 }
 
@@ -168,9 +169,9 @@ int main(void) {
 	/* Reserve memory for two stacks and two TCBs.
 	   Remember that stacks must be 8-byte aligned. */
 	__align(8)
-	static uint32_t stack1[256], stack2[256], stack3[256], stack4[256];
-	//static uint32_t stack1[256], stack2[256], stack3[256], stack4[256];
-	static OS_TCB_t TCB1, TCB2, TCB3, TCB4;
+	static uint32_t stack1[256], stack2[256], stack3[256], stack4[256], stack5[256];
+	//static uint32_t stack1[1024], stack2[1024], stack3[1024], stack4[1024], stack5[1024];
+	static OS_TCB_t TCB1, TCB2, TCB3, TCB4, TCB5;
 	
 	// DEBUG
 	uint32_t i = 0;
@@ -178,6 +179,7 @@ int main(void) {
 	orderedTasks[i++] = &TCB2;
 	orderedTasks[i++] = &TCB3;
 	orderedTasks[i++] = &TCB4;
+	orderedTasks[i++] = &TCB5;
 	
 	// END DEBUG
 	
@@ -194,11 +196,18 @@ int main(void) {
 	OS_initialiseTCB(&TCB1, stack1+256, task1, 0);
 	OS_initialiseTCB(&TCB2, stack2+256, task2, 0);
 	OS_initialiseTCB(&TCB3, stack3+256, task3, 0);
-	OS_initialiseTCB(&TCB4, stack4+256, task5, 0);
-	TCB1.priority = 3;
-	TCB2.priority = 1;
-	TCB3.priority = 2;
-	TCB4.priority = 0;
+	OS_initialiseTCB(&TCB4, stack4+256, task4, 0);
+	OS_initialiseTCB(&TCB5, stack5+256, task5, 0);
+	//OS_initialiseTCB(&TCB1, stack1+1024, task1, 0);
+	//OS_initialiseTCB(&TCB2, stack2+1024, task2, 0);
+	//OS_initialiseTCB(&TCB3, stack3+1024, task3, 0);
+	//OS_initialiseTCB(&TCB4, stack4+1024, task4, 0);
+	//OS_initialiseTCB(&TCB5, stack5+1024, task5, 0);
+	TCB1.priority = 4;
+	TCB2.priority = 2;
+	TCB3.priority = 3;
+	TCB4.priority = 1;
+	TCB5.priority = 0;
 
 	/* Initialise and start the OS */
 	//OS_init(&simpleRoundRobinScheduler);
@@ -207,6 +216,7 @@ int main(void) {
 	OS_addTask(&TCB2);
 	OS_addTask(&TCB3);
 	OS_addTask(&TCB4);
+	OS_addTask(&TCB5);
 	
 	printTasks();
 	
@@ -215,11 +225,13 @@ int main(void) {
 	printf("%#010x\r\n", (uint32_t)stack2);
 	printf("%#010x\r\n", (uint32_t)stack3);
 	printf("%#010x\r\n", (uint32_t)stack4);
+	printf("%#010x\r\n", (uint32_t)stack5);
 	printf("BOTTOM\r\n");
 	printf("%#010x\r\n", (uint32_t)stack1+256*4);
 	printf("%#010x\r\n", (uint32_t)stack2+256*4);
 	printf("%#010x\r\n", (uint32_t)stack3+256*4);
 	printf("%#010x\r\n", (uint32_t)stack4+256*4);
+	printf("%#010x\r\n", (uint32_t)stack5+256*4);
 	printf("START\r\n");
 	
 

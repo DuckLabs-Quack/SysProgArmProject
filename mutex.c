@@ -12,6 +12,8 @@ void OS_mutex_acquire(OS_mutex_t* mutex) {
 	int locked_with_own_tcb = 0;
 	
 	do {
+		uint32_t checkValue = OS_checkValue();
+		
 		loaded_value = __LDREXW((uint32_t*) &(mutex->tcb));
 		
 		OS_TCB_t* currentTCB = OS_currentTCB();
@@ -22,7 +24,7 @@ void OS_mutex_acquire(OS_mutex_t* mutex) {
 		} else  if (loaded_value == (uint32_t) currentTCB) {
 			locked_with_own_tcb = 1;
 		} else {
-			OS_wait(&mutex->waitlist, OS_checkValue());
+			OS_wait(&mutex->waitlist, checkValue);
 		}
 		
 	} while (!locked_with_own_tcb);

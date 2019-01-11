@@ -145,7 +145,7 @@ void _svc_OS_wait(_OS_SVC_StackFrame_t const * const stack) {
 //		uint32_t store_failed = __STREXW((uint32_t) _currentTCB, (uint32_t*) value);
 //	}
 	
-	_scheduler->wait_callback((void*)stack->r0, (void*)stack->r1);
+	_scheduler->wait_callback((void*)stack->r0, (uint32_t)stack->r1);
 }
 
 void _svc_OS_notify(_OS_SVC_StackFrame_t const * const stack) {
@@ -160,8 +160,8 @@ void OS_ISR_notify(void* reason) {
 }
 
 /* Check value return function */
-uint32_t* OS_checkValue (void) {
-	return &_checkValue;
+uint32_t OS_checkValue (void) {
+	return _checkValue;
 }
 
 stack_t* OS_get_pending_ISR_notify(void) {
