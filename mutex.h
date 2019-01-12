@@ -5,6 +5,7 @@
 #include "os_internal.h"
 #include "linkedList.h"
 
+/* Mutex structure definition. */
 typedef struct {
 	OS_TCB_t* tcb;
 	uint32_t counter;

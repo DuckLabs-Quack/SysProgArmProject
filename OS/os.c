@@ -8,7 +8,9 @@ __align(8)
 /* Idle task stack frame area and TCB.  The TCB is not declared const, to ensure that it is placed in writable
    memory by the compiler.  The pointer to the TCB _is_ declared const, as it is visible externally - but it will
    still be writable by the assembly-language context switch. */
-//static OS_StackFrame_t const volatile _idleTaskSF;
+
+/* Since every task is assumed to be using the FPU, the size of the stack frame for the tasks have been changed to allow the 
+	 stacking of the new FPU register. */
 static OS_StackFrameFPU_t const volatile _idleTaskSF;
 static OS_TCB_t OS_idleTCB = { (void *)(&_idleTaskSF + 1), 0, 0, 0 };
 OS_TCB_t const * const OS_idleTCB_p = &OS_idleTCB;
@@ -79,11 +81,8 @@ void OS_start() {
 }
 
 /* Initialises a task control block (TCB) and its associated stack.  See os.h for details. */
+/* This also includes the FPU registers. */
 void OS_initialiseTCB(OS_TCB_t * TCB, uint32_t * const stack, void (* const func)(void const * const), void const * const data) {
-//	TCB->sp = stack - (sizeof(OS_StackFrame_t) / sizeof(uint32_t));
-//	TCB->priority = TCB->state = TCB->data = 0;
-//	OS_StackFrame_t *sf = (OS_StackFrame_t *)(TCB->sp);
-//	memset(sf, 0, sizeof(OS_StackFrame_t));
 	TCB->sp = stack - (sizeof(OS_StackFrameFPU_t) / sizeof(uint32_t));
 	TCB->priority = TCB->state = TCB->data = 0;
 	OS_StackFrameFPU_t *sf = (OS_StackFrameFPU_t *)(TCB->sp);
@@ -132,39 +131,42 @@ OS_TCB_t const * _OS_scheduler() {
 	return _scheduler->scheduler_callback();
 }
 
-/* SVC handler that's called by _OS_task_end when a task finishes.  Invokes the
+/* SVC handler that's called by _OS_task_end when a task finishes. Invokes the
    task end callback and then queues PendSV to call the scheduler. */
 void _svc_OS_task_exit(void) {
 	_scheduler->taskexit_callback(_currentTCB);
 	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
 
+/* SVC handler when a task is waiting. Invokes the wait callback. */
 void _svc_OS_wait(_OS_SVC_StackFrame_t const * const stack) {
-//	uint32_t value = __LDREXW((uint32_t*) _currentTCB);
-//	
-//	if (value != _checkValue) {
-//		uint32_t store_failed = __STREXW((uint32_t) _currentTCB, (uint32_t*) value);
-//	}
-	
 	_scheduler->wait_callback((void*)stack->r0, (uint32_t)stack->r1);
 }
 
+/* SVC handler to notify the OS that a task has finished and notifies a waiting task that it has finished. 
+	 Invokes the notify callback. */
 void _svc_OS_notify(_OS_SVC_StackFrame_t const * const stack) {
+	/* Check value increments everytime a notify occurs. */
 	_checkValue++;
 	_scheduler->notify_callback((void*)stack->r0);
 }
 
+/* ISR notify to handle an interrupt that wants to notify waiting tasks.
+	 Invokes the ISR notify callback. */
 void OS_ISR_notify(void* reason) {
+	/* Check value increments every time an interrupt notify occurs. */
 	_checkValue++;
+	/* __CLREX instruction to clear the exclusive access flags the interrupt has. */
 	__CLREX();
 	_scheduler->ISR_notify_callback(reason);
 }
 
-/* Check value return function */
+/* Check value return function. */
 uint32_t OS_checkValue (void) {
 	return _checkValue;
 }
 
+/* Stack frame for the ISR return function. */
 stack_t* OS_get_pending_ISR_notify(void) {
 	return &_pending_ISR_notify_stack;
 }

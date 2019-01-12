@@ -1,14 +1,17 @@
 #include "linkedList.h"
 #include <stdlib.h>
 
+/* Linked list data structure (Singly linked list).
+	 Used to store the tasks which are currently waiting. */
+		
+/* Initialisation function. */
 void linked_list_init(linked_list_t* linked_list) {
-    // Initialise the linked_list
     linked_list->head = NULL;
 }
 
+/* Returns the head of the linked list and updates the head pointer.
+	 When used for the wait list, the item returned is a task. */
 void* linked_list_remove(linked_list_t* linked_list) {
-    // Return the head of the list of blocks
-    // Update the head pointer
     linked_list_element_t* oldHead = linked_list->head;
 		if (oldHead == NULL) {
 			return NULL;
@@ -19,15 +22,7 @@ void* linked_list_remove(linked_list_t* linked_list) {
     return item;
 }
 
-void linked_list_add(linked_list_t* linked_list, void* newItem) {
-		linked_list_element_t* newElement = malloc(sizeof(linked_list_element_t));
-		newElement->item = newItem;
-	  newElement->next = linked_list->head;
-		// Add the new item to the head of the list
-		linked_list->head = newElement;
-    
-}
-
+/* Appends the new item to the end of the list. */
 void linked_list_append(linked_list_t* linked_list, void* newItem) {
 		linked_list_element_t* newElement = malloc(sizeof(linked_list_element_t));
 		newElement->item = newItem;
@@ -41,7 +36,7 @@ void linked_list_append(linked_list_t* linked_list, void* newItem) {
 			while (currentElement->next != NULL) {
 				currentElement = currentElement->next;
 			}
-			// Add the new item to the end of the list
+			
 			currentElement->next = newElement;
-	}
+		}
 }

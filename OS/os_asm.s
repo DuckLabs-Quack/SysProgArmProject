@@ -71,7 +71,7 @@ _task_switch
     MRS     r3, PSP
     STMFD   r3!, {r4-r11}
 	
-	; TESTING Store S16-31
+	; Stacks the FPU registers so they can be stored into the OS_StackFrameFPU structure
 	VSTMFD r3!, {s16-s31}
 	
     ; Store stack pointer
@@ -79,7 +79,7 @@ _task_switch
     ; Load new stack pointer
     LDR     r3, [r0]
 	
-	; TESTING LOAD S16-31
+	; Unstacks the FPU registers
 	VLDMFD r3!, {s16-s31}
 	
     ; Unstack process registers

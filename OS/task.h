@@ -4,7 +4,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* FPU stack */
+/* FPU stack frame. Since the FPU stacks additional registers on top of the current stack, as well as 
+	 additional registers at the bottom, more registers have to be added to the original stack frame. 
+	 Registers s0-s15, fpscr, and rempty are automatically stacked by the CPU on top of the current stack. 
+	 The FPU also has additional registers s16-s31 and they are included in the stack since lazy stacking is disabled,
+	 and all of the tasks are assumed to be using the FPU. 
+	 
+	 NOTE: Lazy stacking is disabled due to it stacking and unstacking the incorrect amount of registers during a context switch,
+				 causing hard faults. */
 typedef struct s_StackFrameFPU {
 	volatile uint32_t s16;
 	volatile uint32_t s17;

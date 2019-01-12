@@ -65,20 +65,23 @@ uint32_t OS_elapsedTicks(void);
    The fourth argument is a void pointer to data that the task should receive. */
 void OS_initialiseTCB(OS_TCB_t * TCB, uint32_t * const stack, void (* const func)(void const * const), void const * const data);
 
-/* SVC delegate to add a task */
+/* SVC delegate to add a task. */
 void __svc(OS_SVC_ADD_TASK) OS_addTask(OS_TCB_t const * const);
 
 /************************/
 /* Scheduling functions */
 /************************/
 
-/* SVC delegate to yield the current task */
+/* SVC delegate to yield the current task. */
 void __svc(OS_SVC_YIELD) OS_yield(void);
 
+/* SVC delegate to set the current task to wait. */
 void __svc(OS_SVC_WAIT) OS_wait(void* reason, uint32_t value);
+
+/* SVC delegate for notifying a task. */
 void __svc(OS_SVC_NOTIFY) OS_notify(void* reason);
 
-/* ISR deferred nofity */
+/* ISR deferred nofity. */
 void  OS_ISR_notify(void* reason);
 
 /****************/
@@ -88,8 +91,10 @@ void  OS_ISR_notify(void* reason);
 /* Idle task TCB */
 extern OS_TCB_t const * const OS_idleTCB_p;
 
+/* Check value return function. */
 uint32_t OS_checkValue(void);
 
+/* Stack frame for the ISR return function. */
 stack_t* OS_get_pending_ISR_notify(void);
 
 #endif /* _OS_H_ */

@@ -2,6 +2,7 @@
 #include "mutex.h"
 #include <stdio.h>
 
+/* Interrupt tests are defined here */
 void _svc_interrupt_test(_OS_SVC_StackFrame_t* const stack) {
 	printf("Interrupt start\r\n");
 	OS_mutex_t* mutex = (void*) stack->r0;

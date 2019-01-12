@@ -3,7 +3,9 @@
 
 #include <stdint.h>
 
-// LIFO stack structure
+/* LIFO stack frame data structure definition. 
+	 Size of the stack set to 10 by default. 
+	 Having a dynamic size will be unsafe and will have the same problems as before with the wait list and interrupts that notify. */
 typedef struct {
 	void* list[10];
 	uint32_t counter;

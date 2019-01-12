@@ -13,7 +13,7 @@
 #define MID(x) printf("MID "#x"\r\n")
 #define EXIT(x) printf("EXIT "#x"\r\n")
 
-
+/* Uncomment these to disable the task status prints */
 //#define ENTER(x) 
 //#define MID(x) 
 //#define EXIT(x) 
@@ -23,6 +23,10 @@ static queue_t queue;
 
 void printStackPointers();
 
+/* Lowest priority task with the shortest sleep period. 
+	 Demonstrates that the lowest priority task still runs and even with a short sleep period,
+	 it cannot acquire the mutex as frequenctly because a higher priority task has it locked.
+	 It also tests the task communication system by obtaining the queue values filled by task 4. */
 void task1(void const *const args) {
 	float value;
 	int status;
@@ -46,6 +50,9 @@ void task1(void const *const args) {
 		
 	}
 }
+
+/* Mid priority task, medium sleep period. 
+	 Prints the stack pointers to check if the stacks are being stacked and unstacked correctly */
 void task2(void const *const args) {
 	int value;
 	int status;
@@ -61,6 +68,9 @@ void task2(void const *const args) {
 		OS_sleep(3000);
 	}
 }
+
+/* Mid priority task, medium sleep period. 
+	 Filler task to test if the mid priority tasks will run. */
 void task3(void const *const args) {
 	while (1) {
 		ENTER(3);
@@ -74,6 +84,12 @@ void task3(void const *const args) {
 		
 	}
 }
+
+/* High priority task with the longest sleep period. 
+	 Demonstrates that the task will take priority over lower priority tasks when it finishes sleeping,
+	 but also being placed into the wait list in time order behind lower priority tasks. 
+	 Places items into the queue for task 1. 
+	 It also demonstrates an interrupt and that it is correctly handled without breaking the wait list. */
 void task4(void const *const args) {
 	while (1) {
 		ENTER(4);
@@ -88,12 +104,15 @@ void task4(void const *const args) {
 		MID(4b);
 		OS_mutex_release(&mutex);
 		EXIT(4);
+		
+		/* Start the interrupt*/
 		interrupt_test(&mutex);
-		//OS_ISR_notify(&mutex.waitlist);
 		OS_sleep(5000);
 	}
 }
 
+/* Highest priority task with a long sleep period. 
+	 Demonstrates the FPU calculations are working and printing. */
 void task5(void const *const args) {
 	float f = 20.1f;
 	while (1) {
@@ -103,8 +122,7 @@ void task5(void const *const args) {
 		printStackPointers();
 		printf("Message from Task 5: %.1f\r\n", f);
 		MID(5a);
-		//printf("Message from Task 5: %u\r\n", (int)f);
-		f = 20.1f;
+		f *= 2.5f;
 		OS_sleep(2000);
 		OS_mutex_release(&mutex);
 		EXIT(5);
@@ -137,72 +155,47 @@ void printTasks();
 
 /* MAIN FUNCTION */
 int main(void) {
-	/* Initialise the serial port so printf() works */
+	/* Initialise the serial port so printf() works. 
+		 Initialise the queue and mutex. */
 	serial_init();
 	mutex_init(&mutex);
 	queue_init(&queue);
 	
-	float f = 2.0f;
-	
-	for (int i=0;i<10;i++) {
-		f *= (float)i;
-		printf("%.1f\r\n", (float)f);
-	}
-	
-	int item1 = 1;
-	int item2 = 2;
-	int item3 = 3;
-	
-	linked_list_t testList;
-	linked_list_init(&testList);
-	linked_list_add(&testList, &item1);
-	linked_list_add(&testList, &item2);
-	linked_list_add(&testList, &item3);
-	
-	for (int i = 0; i<3; i++) {
-		int* testItem = linked_list_remove(&testList);
-		printf("\r\n Test: %d \r\n", *testItem);
-	}
-	
 	printf("\r\nDocetOS Sleep and Mutex\r\n");
 
-	/* Reserve memory for two stacks and two TCBs.
+	/* Reserve memory for five stacks and five TCBs.
 	   Remember that stacks must be 8-byte aligned. */
 	__align(8)
+	
+	/* Increase from 64 to 256 stack size prevents a hard fault in stacking and unstacking FPU registers 
+		 when switching between tasks that use it and tasks that do not use it. The large size of the stacks shouldn't 
+		 matter as there is only a small amount of tasks that the scheduler is allowed to run. */
 	static uint32_t stack1[256], stack2[256], stack3[256], stack4[256], stack5[256];
-	//static uint32_t stack1[1024], stack2[1024], stack3[1024], stack4[1024], stack5[1024];
 	static OS_TCB_t TCB1, TCB2, TCB3, TCB4, TCB5;
 	
-	// DEBUG
+	/* DEBUG */
 	uint32_t i = 0;
 	orderedTasks[i++] = &TCB1;
 	orderedTasks[i++] = &TCB2;
 	orderedTasks[i++] = &TCB3;
 	orderedTasks[i++] = &TCB4;
 	orderedTasks[i++] = &TCB5;
+	/* END DEBUG */
 	
-	// END DEBUG
-	
+	/* Enable the FPU and disable lazy stacking (explained in task.h comments on the structure of the new stack). 
+		 NOTE: The last line may not be needed as the FPU is already enabled from the project settings. */
 	FPU->FPCCR &= FPU_FPCCR_ASPEN_Msk;
 	FPU->FPCAR;
 	SCB->CPACR |= 0xf << 20;
-	//SCB->CPACR |= 0b00000000000100000000000000000000 << 20;
 
 	/* Initialise the TCBs using the two functions above */
-	//OS_initialiseTCB(&TCB1, stack1+64, task1, 0);
-	//OS_initialiseTCB(&TCB2, stack2+64, task2, 0);
-	//OS_initialiseTCB(&TCB3, stack3+64, task3, 0);
-	//OS_initialiseTCB(&TCB4, stack4+64, task5, 0);
 	OS_initialiseTCB(&TCB1, stack1+256, task1, 0);
 	OS_initialiseTCB(&TCB2, stack2+256, task2, 0);
 	OS_initialiseTCB(&TCB3, stack3+256, task3, 0);
 	OS_initialiseTCB(&TCB4, stack4+256, task4, 0);
 	OS_initialiseTCB(&TCB5, stack5+256, task5, 0);
-	//OS_initialiseTCB(&TCB1, stack1+1024, task1, 0);
-	//OS_initialiseTCB(&TCB2, stack2+1024, task2, 0);
-	//OS_initialiseTCB(&TCB3, stack3+1024, task3, 0);
-	//OS_initialiseTCB(&TCB4, stack4+1024, task4, 0);
-	//OS_initialiseTCB(&TCB5, stack5+1024, task5, 0);
+	
+	/* Set the priority of each task. Lower number is a higher priority. */
 	TCB1.priority = 4;
 	TCB2.priority = 2;
 	TCB3.priority = 3;
@@ -210,7 +203,6 @@ int main(void) {
 	TCB5.priority = 0;
 
 	/* Initialise and start the OS */
-	//OS_init(&simpleRoundRobinScheduler);
 	OS_init(&fixedPriScheduler);
 	OS_addTask(&TCB1);
 	OS_addTask(&TCB2);
@@ -218,6 +210,7 @@ int main(void) {
 	OS_addTask(&TCB4);
 	OS_addTask(&TCB5);
 	
+	/* DEBUG */
 	printTasks();
 	
 	printf("TOP\r\n");
@@ -234,9 +227,7 @@ int main(void) {
 	printf("%#010x\r\n", (uint32_t)stack5+256*4);
 	printf("START\r\n");
 	
-
-	
-	//printStackPointers();
+	/* END DEBUG */
 	
 	OS_start();
 }

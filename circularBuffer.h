@@ -3,6 +3,8 @@
 
 #include "mutex.h"
 
+/* Circular buffer data structure definition. 
+	 The size of the buffer is set to 10 by default. */
 typedef struct {
 	float data[10];
 	int insert;
