@@ -70,10 +70,18 @@ _task_switch
     ; If not, stack remaining process registers (pc, PSR, lr, r0-r3, r12 already stacked)
     MRS     r3, PSP
     STMFD   r3!, {r4-r11}
+	
+	; TESTING Store S16-31
+	VSTMFD r3!, {s16-s31}
+	
     ; Store stack pointer
     STR     r3, [r1]
     ; Load new stack pointer
     LDR     r3, [r0]
+	
+	; TESTING LOAD S16-31
+	VLDMFD r3!, {s16-s31}
+	
     ; Unstack process registers
     LDMFD   r3!, {r4-r11}
     MSR     PSP, r3

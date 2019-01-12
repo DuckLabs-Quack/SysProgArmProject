@@ -6,6 +6,23 @@
 
 /* FPU stack */
 typedef struct s_StackFrameFPU {
+	volatile uint32_t s16;
+	volatile uint32_t s17;
+	volatile uint32_t s18;
+	volatile uint32_t s19;
+	volatile uint32_t s20;
+	volatile uint32_t s21;
+	volatile uint32_t s22;
+	volatile uint32_t s23;
+	volatile uint32_t s24;
+	volatile uint32_t s25;
+	volatile uint32_t s26;
+	volatile uint32_t s27;
+	volatile uint32_t s28;
+	volatile uint32_t s29;
+	volatile uint32_t s30;
+	volatile uint32_t s31;
+	
 	volatile uint32_t r4;
 	volatile uint32_t r5;
 	volatile uint32_t r6;

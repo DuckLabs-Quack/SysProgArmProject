@@ -24,7 +24,7 @@ static queue_t queue;
 void printStackPointers();
 
 void task1(void const *const args) {
-	int value;
+	float value;
 	int status;
 	while (1) {
 		ENTER(1);
@@ -32,13 +32,13 @@ void task1(void const *const args) {
 		MID(1);
 		
 		status = queue_get(&queue, &value);
-		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		printf("Message from Task 1: Status: %d Value: %0.1f \r\n", status, value);
 		
 		status=queue_get(&queue, &value);
-		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		printf("Message from Task 1: Status: %d Value: %0.1f \r\n", status, value);
 		
 		status=queue_get(&queue, &value);
-		printf("Message from Task 1: Status: %d Value: %d \r\n", status, value);
+		printf("Message from Task 1: Status: %d Value: %0.1f \r\n", status, value);
 		OS_sleep(500);
 		OS_mutex_release(&mutex);
 		EXIT(1);
@@ -81,9 +81,9 @@ void task4(void const *const args) {
 		MID(4);
 		printf("Message from Task 4\r\n");
 		MID(4a);
-		queue_put(&queue, 1);
-		queue_put(&queue, 2);
-		queue_put(&queue, 3);
+		queue_put(&queue, 1.5f);
+		queue_put(&queue, 2.4f);
+		queue_put(&queue, 3.6f);
 		OS_sleep(2000);
 		MID(4b);
 		OS_mutex_release(&mutex);
@@ -95,7 +95,7 @@ void task4(void const *const args) {
 }
 
 void task5(void const *const args) {
-	float f = 2.5f;
+	float f = 20.1f;
 	while (1) {
 		ENTER(5);
 		OS_mutex_acquire(&mutex);
@@ -104,7 +104,7 @@ void task5(void const *const args) {
 		printf("Message from Task 5: %.1f\r\n", f);
 		MID(5a);
 		//printf("Message from Task 5: %u\r\n", (int)f);
-		f *= 2.5f;
+		f = 20.1f;
 		OS_sleep(2000);
 		OS_mutex_release(&mutex);
 		EXIT(5);
@@ -128,7 +128,7 @@ uint32_t getCurrentTaskID() {
 }
 
 void printStackPointers() {
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 5; i++) {
 		printf("%#010x\r\n", (uint32_t)orderedTasks[i]->sp);
 	}
 }

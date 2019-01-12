@@ -8,7 +8,8 @@ __align(8)
 /* Idle task stack frame area and TCB.  The TCB is not declared const, to ensure that it is placed in writable
    memory by the compiler.  The pointer to the TCB _is_ declared const, as it is visible externally - but it will
    still be writable by the assembly-language context switch. */
-static OS_StackFrame_t const volatile _idleTaskSF;
+//static OS_StackFrame_t const volatile _idleTaskSF;
+static OS_StackFrameFPU_t const volatile _idleTaskSF;
 static OS_TCB_t OS_idleTCB = { (void *)(&_idleTaskSF + 1), 0, 0, 0 };
 OS_TCB_t const * const OS_idleTCB_p = &OS_idleTCB;
 

@@ -1,5 +1,10 @@
 #include "circularBuffer.h"
 
+/*	Circular buffer data structure.
+		Used for sending data between tasks i.e. task communication. 
+		Has a mutex to prevent simultaneous reading/writing between tasks. */
+
+/*	Initialisation function. */
 void queue_init(queue_t* queue) {
 	queue->insert = 0;
 	queue->retrieve = 0;
@@ -7,7 +12,8 @@ void queue_init(queue_t* queue) {
 	mutex_init(&queue->mutex);
 }
 
-int queue_put(queue_t* queue, int item) {
+/* Adds an item to the queue. */
+int queue_put(queue_t* queue, float item) {
 	
 	OS_mutex_acquire(&queue->mutex);
 	
@@ -27,7 +33,7 @@ int queue_put(queue_t* queue, int item) {
 	return status;
 }
 
-int queue_get(queue_t* queue, int* item) {
+int queue_get(queue_t* queue, float* item) {
 	
 	OS_mutex_acquire(&queue->mutex);
 	
@@ -39,7 +45,7 @@ int queue_get(queue_t* queue, int* item) {
 	} 
 	else {
 		queue->isFull = 0;
-		int value = queue->data[queue->retrieve];
+		float value = queue->data[queue->retrieve];
 		queue->retrieve = (queue->retrieve + 1) % 10;
 	
 		*item = value;
